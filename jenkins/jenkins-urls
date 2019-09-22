@@ -1,7 +1,13 @@
 ## References to explore:
 ----------------------
+https://jenkins.io/doc/book/pipeline/syntax/#agent
+
 https://jenkins.io/doc/book/pipeline/
+
 https://opensource.com/article/18/8/devops-jenkins-2
+
 https://www.baeldung.com/jenkins-pipelines
+
 https://jenkins.io/doc/tutorials/build-a-java-app-with-maven/
+
 https://opensourceforu.com/2018/05/integration-of-a-simple-docker-workflow-with-jenkins-pipeline/
