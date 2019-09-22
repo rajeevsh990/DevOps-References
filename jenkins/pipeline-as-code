@@ -1,0 +1,34 @@
+Example of Jenkinsfile (pipeline as a Code) using maven:
+--------------------------------------------------------
+
+Reference: https://jenkins.io/doc/tutorials/build-a-java-app-with-maven/
+1.	Fork and clone the sample repository on your own GitHub account
+2.	Clone the same repo on Jenkins master (anywhere in /root)
+# mkdir /root/GitHub ; cd /root/GitHub
+# git clone https://github.com/rajeevsh990/simple-java-maven-app.git
+3.	Create your Pipeline project in Jenkins. As instructed in above URL.
+-	Select SCM as git 
+-	Repository URL : https://github.com/<username>/simple-java-maven-app.git
+-	Provide your github creds.
+4.	Create your initial Pipeline as a Jenkinsfile.
+-	create and save new text file with the name Jenkinsfile at the root of your local simple-java-maven-app Git repository.
+-	You need to push the new file or change to remote repository since the jenkins pipeline used the remote git url.
+# vim /root/GitHub/simple-java-maven-app/Jenkinsfile
+pipeline {
+    agent {
+        docker {
+            image 'maven:3-alpine' 
+            args '-v /root/.m2:/root/.m2' 
+        }
+    }
+    stages {
+        stage('Build') { 
+            steps {
+                sh 'mvn -B -DskipTests clean package' 
+            }
+        }
+    }
+}
+# save, do git add and commit the file. 
+5.	Also ensure that the git is intalled on your docker agent. 
+Note: if you are using non-root (jenkins) used on docker agent then the jenkins user should have permission on docker socket. sudo chmod 777 /var/run/docker.sock
