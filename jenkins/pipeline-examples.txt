@@ -1,0 +1,151 @@
+Examples:
+--------
+####### Exapmple 1 #######
+pipeline {
+    agent any
+    environment { 
+        CC = 'clang'
+    }
+    stages {
+        stage('Example') {
+            environment { 
+                AN_ACCESS_KEY = credentials('docker_auth') 
+            }
+            steps {
+                sh 'printenv'
+            }
+        }
+    }
+} //END
+
+####### Exapmple 2 #######
+pipeline {
+    agent any
+    stages {
+        stage('Example Username/Password') {
+            environment {
+                SERVICE_CREDS = credentials('docker')
+            }
+            steps {
+                sh 'echo "Service user is $SERVICE_CREDS_USR"'
+                sh 'echo "Service password is $SERVICE_CREDS_PSW"'
+                sh 'curl -u $SERVICE_CREDS https://myservice.example.com'
+            }
+        }
+        stage('Example Username/Password') {
+            environment {
+                SSH_CREDS = credentials('docker_auth')
+            }
+            steps {
+                sh 'echo "SSH private key is located at $SSH_CREDS"'
+                sh 'echo "SSH user is $SSH_CREDS_USR"'
+                sh 'echo "SSH passphrase is $SSH_CREDS_PSW"'
+            }
+        }
+    }} //END
+
+####### Exapmple 3 #######
+pipeline {
+  agent any
+
+  environment {
+      // This returns 0 or 1 depending on whether build number is even or odd
+      FOO = "${currentBuild.getNumber() % 2}"
+  }
+
+  stages {
+    stage("Hello") {
+      steps {
+        echo "Hello"
+      }
+    }
+    stage("Evaluate FOO") {
+      when {
+        // stage won't be skipped as long as FOO == 0, build number is even
+        environment name: "FOO", value: "0"
+      }
+      steps {
+        echo "World"
+      }
+    }
+  }
+}
+
+####### Exapmple 4 #######
+pipeline {
+  agent any
+
+  stages {
+    stage("One") {
+      steps {
+        echo "Hello"
+      }
+    }
+    stage("Evaluate Master") {
+      when {
+        // skip this stage unless on Master branch
+        branch "master"
+      }
+      steps {
+        echo "World"
+        echo "Heal it"
+      }
+    }
+  }
+}
+####### Exapmple 5 #######
+pipeline {
+  agent any
+  stages {
+    stage("Hello") {
+      steps {
+        echo "Hello"
+      }
+    }
+    stage("Always Skip") {
+      when {
+        // skip this stage unless the expression evaluates to 'true'
+        expression {
+          echo "Should I run?"
+          return false
+        }
+      }
+      steps {
+        echo "World"
+      }
+    }
+  }
+}
+####### Exapmple 6 #######
+pipeline {
+    agent any
+    stages {
+        stage('Example Username/Password') {
+            environment {
+                SERVICE_CREDS = credentials('docker_auth')
+            }
+            steps {
+                sh 'echo "Service user is $SERVICE_CREDS_USR"'
+                sh 'echo "Service password is $SERVICE_CREDS_PSW"'
+                //sh 'curl -u $SERVICE_CREDS https://myservice.example.com'
+            }
+        }
+        stage('Example Username/Passwords') {
+            environment {
+                SSH_CREDS = credentials('docker')
+            }
+            steps {
+                sh 'echo "SSH private key is located at $SSH_CREDS"'
+                sh 'echo "SSH user is $SSH_CREDS_USR"'
+                sh 'echo "SSH passphrase is $SSH_CREDS_PSW"'
+            }
+        }
+    }
+}
+
+####### Exapmple 7 #######
+
+
+####### Exapmple 8 #######
+####### Exapmple 9 #######
+####### Exapmple 10 #######
