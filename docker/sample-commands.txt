@@ -1,0 +1,310 @@
+## Command list (legacy commands)
+>> sudo service docker start									      # start docker service/daemon
+>> docker ps -a 												            # list processes with status
+>> docker run -it busybox sh									      # interactive command
+>> docker rm 305297d7a235 ff0a5c3750b9							# delete container
+>> docker rm $(docker ps -a -q -f status=exited)		# delete container with exited status
+>> docker rmi													              # delete docker images
+>> docker images												            # list docker images available locally
+>> docker pull ubuntu:12.04										      # pulll specific version of ubuntu image
+>> docker search ibm | grep -i websphere						# search images related for ibm websphere
+>> docker build													            # creating a Docker image using Dockerfile
+>> docker login													            # login to docker HUB
+>> docker push	rajeevsh/catnip									    # push catnip image to docker HUB
+>> docker exec -it <container name> <command> 			# to execute whatever command you specify in the container without logging into it.
+>> docker container run hello-world								  # run a 'hello-world' container 
+
+
+==========
+PRACTICALS
+==========
+
+# Run an alpine container
+>> docker container run alpine sh								# Download the alpine image from docker hub and exited
+
+# Run a container in an interactive mode
+>> docker container run -it alpine sh							# Run alpine container and gives the command prompt of it, to check execute 'cat /etc/os-release'
+
+Note: if you want to exit from above container prompt without stopping it press ctl+p+q instead of ctl+c (this sequence only works if you used -it)
+
+# Commands to attach, detach or send in background
+>> docker container run -itd alpine sh							# send running container in background (without sh/bash container can't be attached later)
+>> docker container ls											# lists running containers
+>> docker container attach thirsty_lalande						# attach to the the container by giving system generated name
+Note: attach would need interactive shell (sh, bash etc.) which attaching to the the given container.
+>> docker container stop 750bb5469b77							# stop running docker container alpine
+
+Note: To hide legacy commands execute 'export DOCKER_HIDE_LEGACY_COMMANDS=false'
+
+IMAGES
+------
+>> docker images ls 											# list locally available images
+>> docker image pull hello-world:linux							# pull image from hub.docker.com
+>> docker image rm hello-world									# delete image
+# introduce hub.docker.com, create ID and login
+# docker store - introduction
+# Create images
+>> vim Dockerfile
+		FROM centos:latest
+		MAINTAINER Rajeev Sharma version: 0.1
+		RUN yum -y install httpd
+		COPY index.html /var/www/html/
+		EXPOSE 80
+		RUN sed -i '96i ServerName 127.0.0.1' /etc/httpd/conf/httpd.conf
+		CMD ["/usr/sbin/httpd", "-D", "FOREGROUND"]
+
+# Prepare an index.html as per your webpage display
+>> docker image build -t mywebserver:v1 .						# Build the image
+>> docker container run -p 1234:80/tcp -dit mywebserver:v1		# run container (application) with port 80
+>> docker ps -a													# check/list running containers
+>> docker exec -t <container name> 								# Execute a command on container
+>> docker commit <container id> mywebserver:v2					# Commit to create another image with specific tag v2
+# Push images to HUB
+>> docker image tag mywebserver:v2 rajeevsh/mywebserver:latest	# create an image with your user namespace
+>> docker image push rajeevsh/mywebserver:latest				# push the image to hub.docker.com
+
+# set environments
+>> docker container run -it -e PS1="\h:\w# " alpine				# if you don't use -e flag the default prompt will appear
+>> env															# execute inside container to check environment variables
+
+DOCKER VOLUMES
+==============
+Use of Volumes
+===========
+Decoupling container from storage
+Share volume (storage/data) among different containers
+Attach volume to container
+On deleting container volume does not delete
+
+=========
+PRACTICAL
+=========
+
+> docker volume create myvol1
+> docker volume ls
+> docker volume prune
+> docker volume ls
+> docker volume create myvol1
+> docker volume ls
+> docker pull jenkins
+> docker run --name MyJenkins -v myvol1:/var/jenkins_home -p 8080:8080 -p 50000:50000 jenkins
+> docker ps -a 
+> connect using browser [make port setting in VB NAT]
+> docker run --name MyJenkins1 -v myvol1:/var/jenkins_home -p 9090:8080 -p 60000:50000 jenkins
+-- > above 2 Jenkins instance will share the same directory or configuration. 
+
+DOCKER NETWORK
+--------------
+
+Container 1
+-----------
+>> docker container run -it --rm --name c1 alpine sh
+Unable to find image 'alpine:latest' locally
+latest: Pulling from library/alpine
+050382585609: Pull complete
+Digest: sha256:6a92cd1fcdc8d8cdec60f33dda4db2cb1fcdcacf3410a8e05b3741f44a9b5998
+Status: Downloaded newer image for alpine:latest
+/ # ifconfig eth0
+eth0      Link encap:Ethernet  HWaddr 02:42:AC:11:00:02
+          inet addr:172.17.0.2  Bcast:172.17.255.255  Mask:255.255.0.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:8 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:656 (656.0 B)  TX bytes:0 (0.0 B)
+
+/ # exit
+
+
+
+Container 2
+-----------
+>> docker container run -it --rm --name c2 alpine sh
+/ # ifconfig eth0
+eth0      Link encap:Ethernet  HWaddr 02:42:AC:11:00:03
+          inet addr:172.17.0.3  Bcast:172.17.255.255  Mask:255.255.0.0
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:8 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:0 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0
+          RX bytes:656 (656.0 B)  TX bytes:0 (0.0 B)
+
+/ # ping 172.17.0.2
+PING 172.17.0.2 (172.17.0.2): 56 data bytes
+64 bytes from 172.17.0.2: seq=0 ttl=64 time=0.117 ms
+64 bytes from 172.17.0.2: seq=1 ttl=64 time=0.162 ms
+64 bytes from 172.17.0.2: seq=2 ttl=64 time=0.160 ms
+64 bytes from 172.17.0.2: seq=3 ttl=64 time=0.162 ms
+^C
+--- 172.17.0.2 ping statistics ---
+4 packets transmitted, 4 packets received, 0% packet loss
+round-trip min/avg/max = 0.117/0.150/0.162 ms
+/ # ping c1
+ping: bad address 'c1'
+/ # exit
+
+### Till this point we have seen containers can talk to each other but only with the IP address. This communication uses the default docker network. Let's create a user defined network and let these two containers talk to each other. 
+# list networks
+>> docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+bd46d99f0b51        bridge              bridge              local
+64bd8e6deda7        host                host                local
+1478afaa0e7a        mynetwork           bridge              local
+993274e7fc6b        none                null                local
+
+# Create a docker network 'test'
+
+>> docker network create test
+924e2899d575831c5c12dfabf493fbe99def7148b11209f05b2846587c99301e
+>> docker network ls
+NETWORK ID          NAME                DRIVER              SCOPE
+bd46d99f0b51        bridge              bridge              local
+64bd8e6deda7        host                host                local
+1478afaa0e7a        mynetwork           bridge              local
+993274e7fc6b        none                null                local
+924e2899d575        test                bridge              local
+
+# Now create 2 containers c1 and c2 over network 'test'
+
+Container 1
+-----------
+>> docker container run -it --rm --name c1 --network test alpine sh
+/ # ping c2
+PING c2 (172.22.0.3): 56 data bytes
+64 bytes from 172.22.0.3: seq=0 ttl=64 time=0.244 ms
+64 bytes from 172.22.0.3: seq=1 ttl=64 time=0.172 ms
+64 bytes from 172.22.0.3: seq=2 ttl=64 time=0.180 ms
+^C
+--- c2 ping statistics ---
+3 packets transmitted, 3 packets received, 0% packet loss
+round-trip min/avg/max = 0.172/0.198/0.244 ms
+/ #
+
+Container 2
+-----------
+>> docker container run -it --rm --name c2 --network test alpine sh
+/ # ping c1
+PING c1 (172.22.0.2): 56 data bytes
+64 bytes from 172.22.0.2: seq=0 ttl=64 time=0.400 ms
+64 bytes from 172.22.0.2: seq=1 ttl=64 time=0.222 ms
+64 bytes from 172.22.0.2: seq=2 ttl=64 time=0.180 ms
+^C
+--- c1 ping statistics ---
+3 packets transmitted, 3 packets received, 0% packet loss
+round-trip min/avg/max = 0.180/0.267/0.400 ms
+/ #
+
+
+Port configurations
+--------------------
+>> docker container run --publish 8080:80 -d nginx:latest						# expose 80 on nginx container and connect from host using 8080
+>> docker container run --publish 127.0.0.1:80:80 -d nginx:latest				# specify the IP address to be connected from host (localhost)
+>> docker container run --publish 10.0.2.15:80:80 -d nginx:latest				# specify the IP address to be connected from host (specific)
+
+User defined Networks
+----------------------
+>> docker network create mynet
+>> docker network ls
+>> docker network inspect mynet
+
+
+## To add networks to existing running containers are allowed for bridge networks only not host networks
+>> docker container run -it --rm --name c1 alpine sh
+>> docker container run -it --rm --name c2 alpine sh
+>> docker network ls															# list all networks
+>> docker inspect c1															# details of c1 container
+>> docker network inspect test													# details of all containers attached to test network
+>> docker network disconnect bridge c1											# disconnect existing network
+>> docker network create --driver bridge alpine-net								# create new bridge type network
+>> docker network connect alpine-net c1											# attach to c1 container
+>> docker network inspect alpine-net											# details of all containers attached to alpine-net network
+>> docker network connect alpine-net c2											# now c1 and c2 are connected on same network, try to ping them
+
+
+DOCKER COMPOSE
+==============
+Compose is a tool for defining and running multi-container Docker applications. With Compose, you use a YAML file to configure your application’s services. Then, with a single command, you create and start all the services from your configuration.
+
+
+# Install docker compose
+> sudo curl -L "https://github.com/docker/compose/releases/download/1.24.1/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+> chmod 755 /usr/local/bin/docker-compose
+
+# Docker compose commands - run nginx and redis
+> mkdir compose
+> cd compose/
+> vim docker-compose.yml
+> cat docker-compose.yml
+	version: '3'
+	services:
+	
+		web:
+		  image: nginx
+
+	database:
+		image: redis
+	------
+	
+> docker-compose config
+> docker-compose up -d
+> docker ps -a
+> docker-compose down
+> vim docker-compose.yml
+> cat docker-compose.yml
+	version: '3'
+	services:
+
+	web:
+		image: nginx
+		ports:
+		- 9090:80
+	database:
+		image: redis
+	----
+
+===== commands ====
+   1.  https://github.com/docker/compose/rel...
+
+   2. Using PIP
+    pip install -U docker-compose
+
+Step 2 : Create docker compose file at any location on your system
+   docker-compose.yml
+
+Step 3 : Check the validity of file by command
+    docker-compose config
+
+Step 4 : Run docker-compose.yml file by command
+   docker-compose up -d
+
+Steps 5 : Bring down application by command
+   docker-compose down
+
+TIPS
+How to scale services
+
+—scale
+docker-compose up -d --scale database=4
+
+
+RUN MULTIPLE CONTAINERS
+=======================
+
+# postgres database container: https://hub.docker.com/_/postgres
+>> docker container run --rm --name pg -d -e "POSTGRES_USER=myuser" -e "POSTGRES_PASSWORD=secret" postgres:9.6.6-alpine
+>> docker container run --rm --link pg -it postgres:9.6.6-alpine psql -h pg -U myuser
+
+# connect webapp with database using environment variables
+>> cat app.env
+	POSTGRES_DB=web_app_db
+	POSTGRES_USER=app
+	POSTGRES_PASSWORD=secret
+	POSTGRES_HOST=pg
+	
+>> cat db.env
+	POSTGRES_DB=web_app_db
+	POSTGRES_USER=app
+	POSTGRES_PASSWORD=secret
+	
+>> docker container run -d --name pg --env-file db.env postgres:9.6.6-alpine					# start postgres db with given env file
+>> docker container run -d --link pg --env-file app.env -p 9292:9292 jfahrer/demo_web_app		# connect web application to postgres database
