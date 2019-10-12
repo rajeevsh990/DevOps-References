@@ -1,6 +1,6 @@
 1.	Create a VM on GCP and check ping, ssh connection from jenkins
 2.	Create jenkins user on both system master and agent nodes.
-3.  Add jenkins user into sudoer list 
+3.  Add jenkins user into sudoer list [Optional]
 4.	Setup ssh keys for jenkins (non-root) user on master node.
 5.	Install docker on machine (this should be treated as agent)
 6.	Also install java, wget etc. using yum on agent node. 
