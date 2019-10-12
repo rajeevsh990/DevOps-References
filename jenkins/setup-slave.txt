@@ -1,0 +1,56 @@
+1.	Create a VM on GCP and check ping, ssh connection from jenkins
+2.	Create jenkins user on both system master and agent nodes.
+3.  Add jenkins user into sudoer list 
+4.	Setup ssh keys for jenkins (non-root) user on master node.
+5.	Install docker on machine (this should be treated as agent)
+6.	Also install java, wget etc. using yum on agent node. 
+7.	On Jenkins -> Manage plugins -> configure system -> set docker label (this should be same what you mentioned in the pipeline)
+8.	Test the agent node from Jenkins console.
+
+Commands and steps:
+--------------------
+>> jenkins master
+# sudo yum install java-1.8.0 wget -y
+# sudo useradd -d /var/lib/jenkins jenkins
+# sudo passwd jenkins
+# su - jenkins
+# ssh-keygen -t rsa
+
+>> remote node
+# sudo useradd -d /var/lib/jenkins jenkins
+# sudo passwd jenkins
+# su - jenkins
+# mkdir /var/lib/jenkins/.ssh
+# chmod 700 /var/lib/jenkins/.ssh
+-- In case ssh-copy-id fails
+# cd /var/lib/jenkins/.ssh; touch authorized_keys ; chmod 600 authorized_keys
+
+
+>> Jenkins master
+# su - jenkins
+# ssh-copy-id <remote hostname>
+Note: Copy the public key in authorized_key (on remote node) file of jenkins user. Please note that this public/private key pair should be generated on master so that while launching the agent via ssh you can provide private key in jenkins console. 
+Else, create an authorized_keys file in remote .ssh directory and paste the key content there. Ensure the file permission of authorized_keys file is 600. 
+
+>> Remote node (in case of docker agent)
+# sudo groupadd docker
+# sudo gpasswd -a jenkins docker
+# systemctl status docker
+# sudo systemctl start docker
+# su - jenkins
+# docker image ls [to verify if docker is working]
+NOTE: if still getting error and not able to execute docker coomand with jenkins user then Execute this command on agent: 
+#sudo chmod 777 /var/run/docker.sock		[Optional]
+
+>> Jenkins master
+Navigate to: Jenkins Manage Plugins -> Manage Nodes -> New Node
+Instructions:
+Name: docker [name of agent]
+Remote root directory: <create a dedicated one> [agent uses this workspace]
+Labels: docker [Master uses this label while selecting executers]
+Add crdentials: Add public key and the jenkins username for authentication purpose. 
+Launch method: Launch agent via SSH [this method will use the jenkins user which was added in #2 and the respective public key was added on remote authrized_key file of jenkins user]
+- Host: provide actualy remote hostname using which you can ssh
+- Crdentials: Add credentials for jenkins user and respectively add the private key here.
+- Host key verification strategy: If fails with default settings better to select "Manually trusted key verification strategy' 
+Test agent now. 
