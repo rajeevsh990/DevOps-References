@@ -36,4 +36,6 @@ sample::create_user::user_id: '4001'
 
 - Execute sample::create_user on puppet-agent node. 
 
-Note: Facter variables can be used in Hiera hierarchy paths. 
+Note: Facter variables can be used in Hiera hierarchy paths.  
+> e.g. path: "nodes/$::hostname.yaml"  
+above path will interpolate into the specific hostname.yaml where puppet run is happening.  
