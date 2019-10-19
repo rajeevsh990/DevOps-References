@@ -1,0 +1,3 @@
+---
+sample::create_user::user_name: 'user1'
+sample::create_user::user_id: '4001'
